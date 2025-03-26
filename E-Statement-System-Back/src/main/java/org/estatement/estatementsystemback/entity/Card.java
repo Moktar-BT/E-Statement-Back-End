@@ -20,6 +20,7 @@ public class Card {
     private Date expirationDate;
     private double paymentLimit; // Plafond de crédit accordé par la banque (si applicable)
     private double withdrawalLimit;
+    private double availableLimit;
     private double currentBalance; // Droit d'utilisation
     private int ccv_cvc ;
     private double minimumBalanceAlertForCard ;

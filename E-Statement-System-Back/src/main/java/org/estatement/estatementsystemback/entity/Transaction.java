@@ -4,23 +4,31 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
-
-
 @Data
 @Entity
+@Table(name = "transaction")
 public class Transaction {
     @Id
-    @GeneratedValue
-    private Long id_Transaction;
-    private Long number ;
-    private String operation ;
-    private String category;
-    private LocalDateTime date_time ;
-    private boolean status ;
-    private double amount;
-    private String payementMethod ;
-    @ManyToOne
-    @JoinColumn(name = "idAccount")
-    private Account account;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_transaction")
+    private Long idTransaction;
 
+    private String title;
+    private String operation;
+    private String category;
+
+    @Column(name = "date_time")
+    private LocalDateTime dateTime;
+
+    @Column(name = "status")
+    private boolean status;
+
+    private double amount;
+
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
+    @ManyToOne
+    @JoinColumn(name = "id_account")
+    private Account account;
 }

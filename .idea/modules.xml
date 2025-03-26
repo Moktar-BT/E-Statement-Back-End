@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/E-Statement-Back-End.iml" filepath="$PROJECT_DIR$/.idea/E-Statement-Back-End.iml" />
+      <module fileurl="file://$PROJECT_DIR$/E-Statement-System-Back/E-Statement-System-Back.iml" filepath="$PROJECT_DIR$/E-Statement-System-Back/E-Statement-System-Back.iml" />
     </modules>
   </component>
 </project>

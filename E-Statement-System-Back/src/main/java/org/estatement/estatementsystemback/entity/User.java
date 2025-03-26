@@ -30,9 +30,10 @@ public class User implements UserDetails {
     private String password ;
     private Date userCreationDate ;
     private Date userExpirationDate;
+    private double interestRate;
     private boolean status ;
     @OneToMany
-    private List<Account> account;
+    private List<Account> accounts;
     @OneToMany
     private List<Connection> connectionHistory;
     @OneToMany
