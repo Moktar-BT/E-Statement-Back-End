@@ -8,8 +8,11 @@ import org.estatement.estatementsystemback.dao.UserDAO;
 import org.estatement.estatementsystemback.dto.DashboardDTO.*;
 import org.estatement.estatementsystemback.entity.User;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +27,12 @@ public class UserServiceImpl implements UserService {
     private final CardDAO cardDAO;
 
 
+
+
     @Override
-    public AccountsOverviewDTO getAccountsOverview(String email) {
+    public AccountsOverviewDTO getAccountsOverview() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         User user = userDAO.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -33,13 +40,15 @@ public class UserServiceImpl implements UserService {
         dto.setToTalBalance(accountDAO.findTotalBalanceByAccountFounderEmail(email).orElse(0.0));
         dto.setLastTransaction(transactionDAO.findLatestTransactionAmountByUserEmail(email).orElse(0.0));
         dto.setCreditCards(cardDAO.sumCurrentBalanceByUserEmail(email).orElse(0.0));
-        dto.setInterestRate(user.getInterestRate());
+        dto.setInterestRate(user.getInterestRateTotal());
 
         return dto;
     }
 
     @Override
-    public List<IncomesVsExpenses> getIncomesVsExpenses(String email) {
+    public List<IncomesVsExpenses> getIncomesVsExpenses() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         List<Object[]> results = transactionDAO.findMonthlyIncomeExpenseByUserEmail(email);
 
         List<IncomesVsExpenses> response = new ArrayList<>();
@@ -68,10 +77,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public BudgetSummary getBudgetSummary(String email) {
+    public BudgetSummary getBudgetSummary() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         log.info("Fetching budget summary for email: {}");
 
-        List<Object[]> results = transactionDAO.findMonthlyFinancialSummaryByUserEmail(email);
+        List<Object[]> results = transactionDAO.findLastMonthFinancialSummaryByUserEmail(email);
 
         if (results == null || results.isEmpty()) {
             log.warn("No budget summary data found for email: {}");
@@ -95,18 +106,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<CreditCardSummary> getCreditCardSummaries(String email) {
+    public List<CreditCardSummary> getCreditCardSummaries() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         return new ArrayList<>(cardDAO.findCreditCardSummariesByUserEmail(email));
 
     }
 
     @Override
-    public List<ExpensesAnalysis> getExpensesAnalysis(String email) {
-        return transactionDAO.findExpensesAnalysisByUserEmail(email);
+    public List<ExpensesAnalysis> getExpensesAnalysis() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        // In production:
+        LocalDateTime endDate = LocalDateTime.now();
+        LocalDateTime startDate = endDate.minusYears(1); // Last 12 months
+
+        return transactionDAO.findExpensesAnalysisByUserEmailAndDateRange(email,startDate,endDate);
     }
 
     @Override
-    public List<Last4Transactions> getLast4Transactions(String email) {
+    public List<Last4Transactions> getLast4Transactions() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         return transactionDAO.findLast4TransactionsByUserEmail(
                 email,
                 PageRequest.of(0, 4)

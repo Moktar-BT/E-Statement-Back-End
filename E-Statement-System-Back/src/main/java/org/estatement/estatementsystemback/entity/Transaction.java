@@ -10,25 +10,30 @@ import java.time.LocalDateTime;
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_transaction")
-    private Long idTransaction;
+    @Column(name = "id_transaction") // Explicitement nommé
+    private Long id;
 
     private String title;
     private String operation;
     private String category;
-
-    @Column(name = "date_time")
     private LocalDateTime dateTime;
-
-    @Column(name = "status")
     private boolean status;
-
     private double amount;
-
-    @Column(name = "payment_method")
     private String paymentMethod;
 
     @ManyToOne
-    @JoinColumn(name = "id_account")
+    @JoinColumn(name = "id_account" )
     private Account account;
+
+
+    @ManyToOne
+    @JoinColumn(name = "card_id")
+    private Card card;
+
+    public Account getRelatedAccount() {
+        if (this.card != null) {
+            return this.card.getLinkedAccount();
+        }
+        return this.account;
+    }
 }

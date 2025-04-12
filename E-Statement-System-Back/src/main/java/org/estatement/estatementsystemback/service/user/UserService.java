@@ -6,12 +6,12 @@ import java.util.List;
 
 public interface UserService {
 
-    AccountsOverviewDTO getAccountsOverview(String email);
-    List<IncomesVsExpenses>getIncomesVsExpenses(String email);
-    BudgetSummary getBudgetSummary(String email);
-    List<CreditCardSummary> getCreditCardSummaries(String email);
-    List<ExpensesAnalysis> getExpensesAnalysis(String email);
-    List<Last4Transactions> getLast4Transactions(String email);
+    AccountsOverviewDTO getAccountsOverview();
+    List<IncomesVsExpenses>getIncomesVsExpenses();
+    BudgetSummary getBudgetSummary();
+    List<CreditCardSummary> getCreditCardSummaries();
+    List<ExpensesAnalysis> getExpensesAnalysis();
+    List<Last4Transactions> getLast4Transactions();
 
 
 

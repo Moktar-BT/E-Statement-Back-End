@@ -15,47 +15,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/Dashboard")
 public class UserController {
     @Autowired
     private UserServiceImpl userService;
 
-    @GetMapping("/Dashboard/accountsOverview")
+    @GetMapping("/accountsOverview")
     public ResponseEntity<AccountsOverviewDTO> accountsOverview() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        AccountsOverviewDTO overview = userService.getAccountsOverview(email);
+        AccountsOverviewDTO overview = userService.getAccountsOverview();
         return ResponseEntity.ok(overview);
     }
-    @GetMapping("/Dashboard/getIncomesVsExpenses")
+    @GetMapping("/getIncomesVsExpenses")
     public ResponseEntity <List<IncomesVsExpenses>> getIncomesVsExpenses() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        ArrayList<IncomesVsExpenses> list = new ArrayList<>(userService.getIncomesVsExpenses(email));
+
+        ArrayList<IncomesVsExpenses> list = new ArrayList<>(userService.getIncomesVsExpenses());
         return ResponseEntity.ok(list);
     }
-    @GetMapping("/Dashboard/getBudgetSummary")
+    @GetMapping("/getBudgetSummary")
     public ResponseEntity<BudgetSummary> getBudgetSummary() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return ResponseEntity.ok(userService.getBudgetSummary(email));
+
+        return ResponseEntity.ok(userService.getBudgetSummary());
     }
-    @GetMapping("/Dashboard/getCreditCardSummary")
+    @GetMapping("/getCreditCardSummary")
     public ResponseEntity<List<CreditCardSummary>>getCreditCardSummary() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return ResponseEntity.ok(userService.getCreditCardSummaries(email));
+
+        return ResponseEntity.ok(userService.getCreditCardSummaries());
     }
-    @GetMapping("/Dashboard/getExpensesAnalysis")
+    @GetMapping("/getExpensesAnalysis")
     public ResponseEntity<List<ExpensesAnalysis>> getExpensesAnalysis(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return ResponseEntity.ok(userService.getExpensesAnalysis(email));
+        return ResponseEntity.ok(userService.getExpensesAnalysis());
     }
-    @GetMapping("/Dashboard/getLast4transactions")
+    @GetMapping("/getLast4transactions")
     public ResponseEntity<List<Last4Transactions>>getLast4transactions(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        return ResponseEntity.ok(userService.getLast4Transactions(email));
+        return ResponseEntity.ok(userService.getLast4Transactions());
     }
 }

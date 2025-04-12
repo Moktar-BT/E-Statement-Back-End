@@ -30,7 +30,7 @@ public class User implements UserDetails {
     private String password ;
     private Date userCreationDate ;
     private Date userExpirationDate;
-    private double interestRate;
+    private double interestRateTotal;
     private boolean status ;
     @OneToMany
     private List<Account> accounts;

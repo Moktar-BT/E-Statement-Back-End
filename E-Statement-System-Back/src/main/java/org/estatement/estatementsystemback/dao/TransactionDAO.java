@@ -1,8 +1,10 @@
 package org.estatement.estatementsystemback.dao;
 
 
+import org.estatement.estatementsystemback.dto.AccountOverviewDTO.TransactionDTO;
 import org.estatement.estatementsystemback.dto.DashboardDTO.ExpensesAnalysis;
 import org.estatement.estatementsystemback.dto.DashboardDTO.Last4Transactions;
+import org.estatement.estatementsystemback.dto.TransactionDTO.TransactionsPageDTO;
 import org.estatement.estatementsystemback.entity.Transaction;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,29 +78,141 @@ public interface TransactionDAO extends JpaRepository<Transaction, Long> {
     JOIN account a ON t.id_account = a.id
     JOIN user u ON a.account_founder_id_user = u.id_user
     WHERE u.email = ?1
-    AND MONTH(t.date_time) = MONTH(CURRENT_DATE())
-    AND YEAR(t.date_time) = YEAR(CURRENT_DATE())
+    AND MONTH(t.date_time) = MONTH(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))
+    AND YEAR(t.date_time) = YEAR(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))
     """, nativeQuery = true)
-    List<Object[]> findMonthlyFinancialSummaryByUserEmail(String userEmail);
-
+    List<Object[]> findLastMonthFinancialSummaryByUserEmail(String userEmail);
     @Query("SELECT NEW org.estatement.estatementsystemback.dto.DashboardDTO.ExpensesAnalysis(" +
             "t.category, " +
-            "CAST(SUM(t.amount) AS double)) " +  // Explicit cast to double
+            "CAST(SUM(t.amount) AS double)) " +
             "FROM Transaction t " +
             "JOIN t.account a " +
             "JOIN a.accountFounder u " +
             "WHERE u.email = :email " +
+            "AND t.dateTime >= :startDate " +
+            "AND t.dateTime <= :endDate " +
+            "AND t.operation IN ('WITHDRAWAL', 'PAYMENT', 'TRANSFER', 'FEE') " +
             "GROUP BY t.category " +
             "ORDER BY SUM(t.amount) DESC")
-    List<ExpensesAnalysis> findExpensesAnalysisByUserEmail(@Param("email") String email);
+    List<ExpensesAnalysis> findExpensesAnalysisByUserEmailAndDateRange(
+            @Param("email") String email,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT NEW org.estatement.estatementsystemback.dto.DashboardDTO.Last4Transactions(" +
-            "t.idTransaction, t.status, t.amount, t.title) " +
+            "t.id, t.status, t.amount, t.title) " +
             "FROM Transaction t " +
             "JOIN t.account a " +
             "JOIN a.accountFounder u " +
             "WHERE u.email = :email " +
-            "ORDER BY t.dateTime DESC, t.idTransaction DESC")
+            "ORDER BY t.dateTime DESC, t.id DESC")
+
     List<Last4Transactions> findLast4TransactionsByUserEmail(@Param("email") String email, PageRequest pageable);
+
+    @Query("SELECT NEW org.estatement.estatementsystemback.dto.AccountOverviewDTO.TransactionDTO(" +
+            "t.id, t.operation, t.category, t.dateTime, t.status, t.amount) " +
+            "FROM Transaction t " +
+            "JOIN t.account a " +
+            "JOIN a.accountFounder u " +
+            "WHERE u.email = :email " +
+            "AND (:accountId IS NULL OR a.id = :accountId) " +
+            "AND (" +
+            "   (:period = 'this_week' AND t.dateTime >= :weekStartDate AND t.dateTime <= CURRENT_TIMESTAMP) " +
+            "   OR (:period = 'this_month' AND MONTH(t.dateTime) = MONTH(CURRENT_DATE) AND YEAR(t.dateTime) = YEAR(CURRENT_DATE)) " +
+            "   OR (:period = 'last_month' AND MONTH(t.dateTime) = MONTH(CURRENT_DATE - 1 MONTH) AND YEAR(t.dateTime) = YEAR(CURRENT_DATE - 1 MONTH)) " +
+            "   OR (:period = 'last_3_months' AND t.dateTime >= :threeMonthsAgo AND t.dateTime <= CURRENT_TIMESTAMP) " +
+            ") " +
+            "AND (" +
+            "   (:operationType = 'all') " +
+            "   OR (:operationType = 'expenses' AND t.operation IN ('WITHDRAWAL', 'PAYMENT', 'TRANSFER', 'FEE')) " +
+            "   OR (:operationType = 'incomes' AND t.operation = 'DEPOSIT') " +
+            ") " +
+            "ORDER BY t.dateTime DESC")
+    List<TransactionDTO> findFilteredTransactions(
+            @Param("email") String email,
+            @Param("accountId") Long accountId,
+            @Param("period") String period,
+            @Param("operationType") String operationType,
+            @Param("weekStartDate") LocalDateTime weekStartDate,
+            @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo);
+
+
+    @Query("SELECT NEW org.estatement.estatementsystemback.dto.AccountOverviewDTO.TransactionDTO(" +
+            "t.id, t.operation, t.category, t.dateTime, t.status, t.amount) " +
+            "FROM Transaction t " +
+            "JOIN t.card c " +
+            "JOIN c.linkedAccount.accountFounder u " +
+            "WHERE u.email = :email " +
+            "AND (:cardId IS NULL OR c.id_card = :cardId) " +
+            "AND (" +
+            "   (:period = 'this_week' AND t.dateTime >= :weekStartDate AND t.dateTime <= CURRENT_TIMESTAMP) " +
+            "   OR (:period = 'this_month' AND MONTH(t.dateTime) = MONTH(CURRENT_DATE) AND YEAR(t.dateTime) = YEAR(CURRENT_DATE)) " +
+            "   OR (:period = 'last_month' AND MONTH(t.dateTime) = MONTH(CURRENT_DATE - 1 MONTH) AND YEAR(t.dateTime) = YEAR(CURRENT_DATE - 1 MONTH)) " +
+            "   OR (:period = 'last_3_months' AND t.dateTime >= :threeMonthsAgo AND t.dateTime <= CURRENT_TIMESTAMP) " +
+            ") " +
+            "AND (" +
+            "   (:operationType = 'all') " +
+            "   OR (:operationType = 'expenses' AND t.operation IN ('WITHDRAWAL', 'PAYMENT', 'TRANSFER', 'FEE')) " +
+            "   OR (:operationType = 'incomes' AND t.operation = 'DEPOSIT') " +
+            ") " +
+            "ORDER BY t.dateTime DESC")
+    List<TransactionDTO>getCardTransactions(
+            @Param("email") String email,
+            @Param("cardId") Long cardId,
+            @Param("period") String period,
+            @Param("operationType") String operationType,
+            @Param("weekStartDate") LocalDateTime weekStartDate,
+            @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo);
+
+
+
+    @Query("""
+    SELECT NEW org.estatement.estatementsystemback.dto.TransactionDTO.TransactionsPageDTO(
+        t.id, t.operation, t.category, t.paymentMethod,
+        a.rib, c.cardNumber, t.dateTime, t.status, t.amount
+    )
+    FROM Transaction t
+    LEFT JOIN t.card c
+    LEFT JOIN t.account a
+    LEFT JOIN Account acc
+    JOIN acc.accountFounder u
+    WHERE (c.linkedAccount = acc OR a = acc)
+    AND u.email = :email
+    AND (
+        (:period = 'this_month' AND t.dateTime >= :firstDayOfThisMonth AND t.dateTime < :now) OR
+        (:period = 'last_month' AND t.dateTime >= :firstDayOfLastMonth AND t.dateTime < :firstDayOfThisMonth) OR
+        (:period = 'last_3_months' AND t.dateTime >= :threeMonthsAgo AND t.dateTime <= :now) OR
+        (:period = 'last_year' AND t.dateTime >= :oneYearAgo AND t.dateTime <= :now)
+    )
+    AND (
+        :operationType = 'all' OR
+        (:operationType = 'expenses' AND t.operation IN ('WITHDRAWAL', 'PAYMENT', 'TRANSFER', 'FEE')) OR
+        (:operationType = 'incomes' AND t.operation = 'DEPOSIT')
+    )
+    AND (
+        :filterType = 'all' OR
+        (:filterType = 'card' AND (:cardId IS NULL OR c.id_card = :cardId)) OR
+        (:filterType = 'account' AND (:accountId IS NULL OR a.id = :accountId))
+    )
+    ORDER BY t.dateTime DESC
+""")
+    List<TransactionsPageDTO> getFilteredTransactions(
+            @Param("email") String email,
+            @Param("period") String period,
+            @Param("operationType") String operationType,
+            @Param("filterType") String filterType,
+            @Param("cardId") Long cardId,
+            @Param("accountId") Long accountId,
+            @Param("firstDayOfThisMonth") LocalDateTime firstDayOfThisMonth,
+            @Param("firstDayOfLastMonth") LocalDateTime firstDayOfLastMonth,
+            @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo,
+            @Param("oneYearAgo") LocalDateTime oneYearAgo,
+            @Param("now") LocalDateTime now
+    );
+
+
+
+
+
 
 }
