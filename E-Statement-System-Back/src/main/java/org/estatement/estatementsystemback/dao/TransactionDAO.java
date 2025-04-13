@@ -4,6 +4,7 @@ package org.estatement.estatementsystemback.dao;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.TransactionDTO;
 import org.estatement.estatementsystemback.dto.DashboardDTO.ExpensesAnalysis;
 import org.estatement.estatementsystemback.dto.DashboardDTO.Last4Transactions;
+import org.estatement.estatementsystemback.dto.StatementDTO.StatementTransactionDTO;
 import org.estatement.estatementsystemback.dto.TransactionDTO.TransactionsPageDTO;
 import org.estatement.estatementsystemback.entity.Transaction;
 import org.springframework.data.domain.PageRequest;
@@ -209,6 +210,29 @@ public interface TransactionDAO extends JpaRepository<Transaction, Long> {
             @Param("oneYearAgo") LocalDateTime oneYearAgo,
             @Param("now") LocalDateTime now
     );
+
+
+    @Query("SELECT new org.estatement.estatementsystemback.dto.StatementDTO.StatementTransactionDTO(" +
+            "t.dateTime, t.id, t.operation, t.category, t.amount) " +
+            "FROM Transaction t " +
+            "WHERE (:accountId IS NULL OR t.account.id = :accountId) " +
+            "AND (:cardId IS NULL OR t.card.id_card = :cardId) " +
+            "AND t.dateTime BETWEEN :startDate AND :endDate " +
+            "AND t.operation IN :operationTypes " +
+            "AND t.status = true " +
+            "AND (t.account.accountFounder.email = :email OR t.card.linkedAccount.accountFounder.email = :email)")
+    List<StatementTransactionDTO> findStatementTransactionsByUserEmail(
+            @Param("email") String email,
+            @Param("accountId") Long accountId,
+            @Param("cardId") Long cardId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("operationTypes") List<String> operationTypes
+    );
+
+
+
+
 
 
 

@@ -2,6 +2,7 @@ package org.estatement.estatementsystemback.service.transaction;
 
 import lombok.RequiredArgsConstructor;
 import org.estatement.estatementsystemback.dao.TransactionDAO;
+import org.estatement.estatementsystemback.dto.StatementDTO.StatementTransactionDTO;
 import org.estatement.estatementsystemback.dto.TransactionDTO.TransactionsPageDTO;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,6 +42,13 @@ public class TransactionServiceImpl implements TransactionService{
                 now
         );
 
+    }
+
+    @Override
+    public List<StatementTransactionDTO> findStatementTransactions(Long accountId, Long cardId, LocalDateTime startDate, LocalDateTime endDate, List<String> operationTypes) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return transactionDAO.findStatementTransactionsByUserEmail(email,accountId,cardId,startDate,endDate,operationTypes);
     }
 
 
