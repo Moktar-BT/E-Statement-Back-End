@@ -16,33 +16,36 @@ import java.util.List;
 public class TransactionServiceImpl implements TransactionService{
     private final TransactionDAO transactionDAO;
 
-    @Override
-    public List<TransactionsPageDTO> getFilteredTransactions(String period, String operationType, String filterType, Long cardId, Long accountId) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime firstDayOfThisMonth = now.withDayOfMonth(1);
-        LocalDateTime firstDayOfLastMonth = firstDayOfThisMonth.minusMonths(1);
-        LocalDateTime threeMonthsAgo = now.minusMonths(3);
-        LocalDateTime oneYearAgo = now.minusYears(1);
 
+    @Override
+    public List<TransactionsPageDTO> findTransactionsWithFilters(
+            String period,
+            String operationType,
+            String source, // "account", "card", or "all"
+            Long sourceId
+    ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDate = switch (period.toLowerCase()) {
+            case "last_week" -> now.minusWeeks(1);
+            case "last_month" -> now.minusMonths(1);
+            case "last_quarter" -> now.minusMonths(3);
+            case "last_year" -> now.minusYears(1);
+            default -> now.minusYears(10); // default to 10 years ago
+        };
 
-        return transactionDAO.getFilteredTransactions(
+        return transactionDAO.findTransactionsWithFilters(
                 email,
-                period != null ? period : "last_month",
-                operationType != null ? operationType : "all",
-                filterType != null ? filterType : "all",
-                cardId,
-                accountId,
-                firstDayOfThisMonth,
-                firstDayOfLastMonth,
-                threeMonthsAgo,
-                oneYearAgo,
-                now
+                source != null ? source : "all",
+                sourceId,
+                startDate,
+                now,
+                operationType != null ? operationType : "all"
         );
-
     }
+
 
     @Override
     public List<StatementTransactionDTO> findStatementTransactions(Long accountId, Long cardId, LocalDateTime startDate, LocalDateTime endDate, List<String> operationTypes) {

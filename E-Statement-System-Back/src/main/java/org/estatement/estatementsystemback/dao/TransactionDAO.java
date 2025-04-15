@@ -10,13 +10,14 @@ import org.estatement.estatementsystemback.entity.Transaction;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
+@EnableJpaRepositories
 @Repository
 public interface TransactionDAO extends JpaRepository<Transaction, Long> {
     @Query(value = "SELECT amount FROM transaction t " +
@@ -167,49 +168,44 @@ public interface TransactionDAO extends JpaRepository<Transaction, Long> {
 
 
 
+    // In TransactionRepository.java
     @Query("""
-    SELECT NEW org.estatement.estatementsystemback.dto.TransactionDTO.TransactionsPageDTO(
-        t.id, t.operation, t.category, t.paymentMethod,
-        a.rib, c.cardNumber, t.dateTime, t.status, t.amount
+    SELECT new org.estatement.estatementsystemback.dto.TransactionDTO.TransactionsPageDTO(
+        t.id,
+        t.operation,
+        t.category,
+        t.paymentMethod,
+        a.rib,
+        c.cardNumber,
+        t.dateTime,
+        t.status,
+        t.amount
     )
     FROM Transaction t
-    LEFT JOIN t.card c
     LEFT JOIN t.account a
-    LEFT JOIN Account acc
-    JOIN acc.accountFounder u
-    WHERE (c.linkedAccount = acc OR a = acc)
-    AND u.email = :email
+    LEFT JOIN t.card c
+    WHERE (:email IS NULL OR a.accountFounder.email = :email)
     AND (
-        (:period = 'this_month' AND t.dateTime >= :firstDayOfThisMonth AND t.dateTime < :now) OR
-        (:period = 'last_month' AND t.dateTime >= :firstDayOfLastMonth AND t.dateTime < :firstDayOfThisMonth) OR
-        (:period = 'last_3_months' AND t.dateTime >= :threeMonthsAgo AND t.dateTime <= :now) OR
-        (:period = 'last_year' AND t.dateTime >= :oneYearAgo AND t.dateTime <= :now)
+        :source = 'all' OR 
+        (:source = 'account' AND a.id = :sourceId) OR 
+        (:source = 'card' AND c.id_card = :sourceId)
     )
+    AND t.dateTime BETWEEN :startDate AND :endDate
     AND (
         :operationType = 'all' OR
         (:operationType = 'expenses' AND t.operation IN ('WITHDRAWAL', 'PAYMENT', 'TRANSFER', 'FEE')) OR
         (:operationType = 'incomes' AND t.operation = 'DEPOSIT')
     )
-    AND (
-        :filterType = 'all' OR
-        (:filterType = 'card' AND (:cardId IS NULL OR c.id_card = :cardId)) OR
-        (:filterType = 'account' AND (:accountId IS NULL OR a.id = :accountId))
-    )
-    ORDER BY t.dateTime DESC
 """)
-    List<TransactionsPageDTO> getFilteredTransactions(
+    List<TransactionsPageDTO> findTransactionsWithFilters(
             @Param("email") String email,
-            @Param("period") String period,
-            @Param("operationType") String operationType,
-            @Param("filterType") String filterType,
-            @Param("cardId") Long cardId,
-            @Param("accountId") Long accountId,
-            @Param("firstDayOfThisMonth") LocalDateTime firstDayOfThisMonth,
-            @Param("firstDayOfLastMonth") LocalDateTime firstDayOfLastMonth,
-            @Param("threeMonthsAgo") LocalDateTime threeMonthsAgo,
-            @Param("oneYearAgo") LocalDateTime oneYearAgo,
-            @Param("now") LocalDateTime now
+            @Param("source") String source, // "account", "card", or "all"
+            @Param("sourceId") Long sourceId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("operationType") String operationType
     );
+
 
 
     @Query("SELECT new org.estatement.estatementsystemback.dto.StatementDTO.StatementTransactionDTO(" +

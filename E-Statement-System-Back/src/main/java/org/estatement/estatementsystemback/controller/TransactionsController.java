@@ -24,11 +24,14 @@ public class TransactionsController {
     public List<TransactionsPageDTO> getFilteredTransactions(
             @RequestParam(required = false) String period,
             @RequestParam(required = false) String operationType,
-            @RequestParam(required = false) String filterType,
-            @RequestParam(required = false) Long cardId,
-            @RequestParam(required = false) Long accountId
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) Long sourceId
+
     ) {
-        return transactionService.getFilteredTransactions(period, operationType, filterType, cardId, accountId);
+        return transactionService.findTransactionsWithFilters(period,
+               operationType,
+                 source,
+                sourceId);
     }
     @GetMapping("/StatementTransactions")
     public List<StatementTransactionDTO> getStatementTransactions(

@@ -32,6 +32,9 @@ public class User implements UserDetails {
     private Date userExpirationDate;
     private double interestRateTotal;
     private boolean status ;
+    private boolean receiveEmailNotifications;
+    private boolean receiveSmsNotifications;
+    private boolean receivePushNotifications;
     @OneToMany
     private List<Account> accounts;
     @OneToMany

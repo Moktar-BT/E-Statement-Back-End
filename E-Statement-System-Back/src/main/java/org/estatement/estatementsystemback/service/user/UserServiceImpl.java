@@ -6,6 +6,7 @@ import org.estatement.estatementsystemback.dao.CardDAO;
 import org.estatement.estatementsystemback.dao.TransactionDAO;
 import org.estatement.estatementsystemback.dao.UserDAO;
 import org.estatement.estatementsystemback.dto.DashboardDTO.*;
+import org.estatement.estatementsystemback.dto.NotifcationsDTO.NotificationDTO;
 import org.estatement.estatementsystemback.entity.User;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
@@ -25,8 +26,6 @@ public class UserServiceImpl implements UserService {
     private final AccountDAO accountDAO;
     private final TransactionDAO transactionDAO;
     private final CardDAO cardDAO;
-
-
 
 
     @Override
@@ -121,7 +120,7 @@ public class UserServiceImpl implements UserService {
         LocalDateTime endDate = LocalDateTime.now();
         LocalDateTime startDate = endDate.minusYears(1); // Last 12 months
 
-        return transactionDAO.findExpensesAnalysisByUserEmailAndDateRange(email,startDate,endDate);
+        return transactionDAO.findExpensesAnalysisByUserEmailAndDateRange(email, startDate, endDate);
     }
 
     @Override
@@ -134,4 +133,23 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    @Override
+    public void setNotifications(NotificationDTO dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        userDAO.updateNotificationPreferencesByEmail(
+                email,
+                dto.isReceiveEmailNotifications(),
+                dto.isReceiveSmsNotifications(),
+                dto.isReceivePushNotifications()
+        );
+
+    }
+
+    @Override
+    public NotificationDTO getNotificationPreferences() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userDAO.findNotificationPreferencesByEmail(email);
+    }
 }

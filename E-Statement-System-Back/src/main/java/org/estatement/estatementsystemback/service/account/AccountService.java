@@ -5,8 +5,8 @@ import org.estatement.estatementsystemback.dto.AccountOverviewDTO.CPIL;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.RIB_IBAN_Type;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.TransactionDTO;
 import org.estatement.estatementsystemback.dto.DashboardDTO.CreditCardSummary;
-import org.estatement.estatementsystemback.entity.Transaction;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,4 +16,5 @@ public interface AccountService {
     Optional<CPIL> getCPIL( Long account_id);
     List<TransactionDTO>getTransactions( Long accountId, String period, String operationType);
     List<CreditCardSummary> findCreditCardsByAccountAndUser( Long account_id);
+    void updateMinimumBalanceAlert(Long accountId, double newAlert) throws AccountNotFoundException;
 }

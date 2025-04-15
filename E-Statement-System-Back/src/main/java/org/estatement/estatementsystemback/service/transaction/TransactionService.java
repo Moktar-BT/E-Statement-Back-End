@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TransactionService {
-    List<TransactionsPageDTO> getFilteredTransactions(
+    List<TransactionsPageDTO> findTransactionsWithFilters(
             String period,
             String operationType,
-            String filterType,
-            Long cardId,
-            Long accountId
+            String source, // "account", "card", or "all"
+            Long sourceId
     );
+
     List<StatementTransactionDTO>findStatementTransactions(  Long accountId,
                                                              Long cardId,
                                                              LocalDateTime startDate,

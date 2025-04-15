@@ -1,5 +1,6 @@
 package org.estatement.estatementsystemback.config;
 
+import jakarta.ws.rs.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.estatement.estatementsystemback.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,6 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
                 .authorizeHttpRequests(httprequest -> httprequest
                         .requestMatchers("/auth/signin", "/auth/signup").permitAll() // Allow unauthenticated access
-                        .requestMatchers("/auth/**").authenticated() // Secure other /auth/** endpoints
                         .anyRequest().authenticated() // Secure all other endpoints
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session

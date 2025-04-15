@@ -1,10 +1,12 @@
 package org.estatement.estatementsystemback.dao;
 
+import jakarta.transaction.Transactional;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.AccountInformation;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.CPIL;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.RIB_IBAN_Type;
 import org.estatement.estatementsystemback.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,4 +48,15 @@ public interface AccountDAO extends JpaRepository<Account, Long> {
     Optional<CPIL> findCPILByAccountIdAndUserEmail(
             @Param("accountId") Long accountId,
             @Param("userEmail") String userEmail);
+
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Account a SET a.minimumBalanceAlertForAccount = :newAlert " +
+            "WHERE a.id = :accountId AND a.accountFounder.email = :userEmail")
+    int updateMinimumBalanceAlert(  // Changed return type to int
+                                    @Param("accountId") Long accountId,
+                                    @Param("newAlert") double newAlert,
+                                    @Param("userEmail") String userEmail
+    );
 }

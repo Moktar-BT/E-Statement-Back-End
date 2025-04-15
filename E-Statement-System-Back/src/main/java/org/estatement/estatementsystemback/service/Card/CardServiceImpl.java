@@ -1,5 +1,6 @@
 package org.estatement.estatementsystemback.service.Card;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.estatement.estatementsystemback.dao.CardDAO;
 import org.estatement.estatementsystemback.dao.TransactionDAO;
@@ -74,4 +75,19 @@ public class CardServiceImpl implements CardService {
         String email = authentication.getName();
         return cardDAO.findCardInformationsByCardId(card_id,email);
     }
+
+    @Override
+    @Transactional
+    public void updateMinimumBalanceAlert(Long cardId, double newAlert) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userEmail = authentication.getName();
+
+        int updatedRows = cardDAO.updateMinimumBalanceAlertForCard(
+                cardId,
+                newAlert,
+                userEmail
+        );
+
+    }
+
 }

@@ -16,5 +16,6 @@ public interface CardService {
     Optional<CPWL>findCPWLForConnectedUser(Long card_id);
     List<TransactionDTO>getCardTransactions(Long cardId, String period, String operationType);
     CardInformations findCardInformationsByCardId(Long card_id);
+    void updateMinimumBalanceAlert(Long cardId, double newAlert);
 
 }

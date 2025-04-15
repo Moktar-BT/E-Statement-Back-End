@@ -1,5 +1,6 @@
 package org.estatement.estatementsystemback.service.account;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.estatement.estatementsystemback.dao.AccountDAO;
 import org.estatement.estatementsystemback.dao.CardDAO;
@@ -10,11 +11,11 @@ import org.estatement.estatementsystemback.dto.AccountOverviewDTO.CPIL;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.RIB_IBAN_Type;
 import org.estatement.estatementsystemback.dto.AccountOverviewDTO.TransactionDTO;
 import org.estatement.estatementsystemback.dto.DashboardDTO.CreditCardSummary;
-import org.estatement.estatementsystemback.entity.Transaction;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -86,5 +87,22 @@ public class AccountServiceImpl implements AccountService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         return  cardDAO.findCreditCardsByAccountAndUser(account_id,email);
+    }
+
+    @Override
+
+    @Transactional
+    public void updateMinimumBalanceAlert(Long accountId, double newAlert) throws AccountNotFoundException {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        int updatedRows = accountDAO.updateMinimumBalanceAlert(
+                accountId,
+                newAlert,
+                userEmail
+        );
+
+        if (updatedRows == 0) {
+            throw new AccountNotFoundException("Account not found or doesn't belong to user");
+        }
     }
 }
